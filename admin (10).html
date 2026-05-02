@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HINEMOS Shift — Admin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f5f4f0; color: #1a1a18; min-height: 100vh; }
+
+  /* Header */
+  .top-bar { background: #fff; border-bottom: 1px solid #e8e6e0; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .brand { font-size: 15px; font-weight: 600; color: #1a1a18; }
+  .brand em { color: #b07d3a; font-style: normal; }
+  .brand-sub { font-size: 12px; color: #999; margin-left: 10px; font-weight: 400; }
+
+  /* Tabs */
+  .tab-bar { background: #fff; border-bottom: 1px solid #e8e6e0; padding: 0 32px; display: flex; gap: 0; }
+  .tab { padding: 14px 20px; font-size: 13px; font-weight: 500; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.18s; }
+  .tab:hover { color: #444; }
+  .tab.active { color: #b07d3a; border-bottom-color: #b07d3a; }
+
+  /* Layout */
+  .page { display: none; }
+  .page.active { display: block; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 24px; }
+
+  /* Section label */
+  .sec-label { font-size: 11px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #999; margin-bottom: 8px; }
+
+  /* Cards */
+  .card { background: #fff; border: 1px solid #e8e6e0; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+  .card-title { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+
+  /* Inputs */
+  input[type=text], input[type=date], input[type=time], input[type=number], textarea {
+    background: #f8f7f4; border: 1px solid #ddd; border-radius: 8px;
+    padding: 10px 13px; font-size: 14px; color: #1a1a18; font-family: 'Inter', sans-serif;
+    outline: none; transition: border-color 0.18s; width: 100%;
+  }
+  input:focus, textarea:focus { border-color: #b07d3a; background: #fff; }
+  input::placeholder, textarea::placeholder { color: #bbb; }
+
+  /* Staff chips */
+  .staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .chip { display: flex; align-items: center; gap: 9px; border: 1px solid #e0ddd6; border-radius: 8px; padding: 10px 13px; cursor: pointer; transition: all 0.15s; background: #fafaf8; user-select: none; }
+  .chip:hover { border-color: #c9a06a; }
+  .chip.on { border-color: #b07d3a; background: #fef9f0; }
+  .chip-box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #ccc; background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .chip.on .chip-box { background: #b07d3a; border-color: #b07d3a; }
+  .chip-tick { display: none; width: 10px; height: 10px; }
+  .chip.on .chip-tick { display: block; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .chip-name { font-size: 13px; font-weight: 500; flex: 1; color: #333; }
+  .chip.on .chip-name { color: #1a1a18; }
+  .chip-del { background: none; border: none; color: #ccc; cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px; transition: color 0.15s; border-radius: 4px; }
+  .chip-del:hover { color: #e05a3a; background: #fff0ed; }
+
+  /* Add staff row */
+  .add-row { display: flex; gap: 8px; }
+  .add-row input { flex: 1; }
+  .add-btn { background: #fef9f0; border: 1px solid #c9a06a; border-radius: 8px; color: #b07d3a; padding: 10px 18px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+  .add-btn:hover { background: #b07d3a; color: #fff; }
+
+  /* Dates toolbar */
+  .dates-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .dates-count { font-size: 13px; color: #888; }
+  .paste-btn { background: #f5f4f0; border: 1px solid #ddd; border-radius: 7px; color: #666; padding: 6px 14px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .paste-btn:hover { border-color: #b07d3a; color: #b07d3a; background: #fef9f0; }
+  .paste-btn.active { border-color: #b07d3a; color: #b07d3a; background: #fef9f0; }
+
+  /* Date rows */
+  .col-hd { display: grid; grid-template-columns: 1fr 90px 90px 60px 32px; gap: 8px; padding: 0 2px; margin-bottom: 6px; }
+  .col-hd span { font-size: 11px; color: #bbb; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; }
+  .date-row { display: grid; grid-template-columns: 1fr 90px 90px 60px 32px; gap: 8px; align-items: center; margin-bottom: 8px; animation: rowIn 0.15s ease; }
+  @keyframes rowIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+  .date-row input[type=number] { text-align: center; font-family: 'DM Mono', monospace; }
+  .date-row input[type=date], .date-row input[type=time] { font-family: 'DM Mono', monospace; font-size: 13px; }
+  .del-btn { width: 32px; height: 36px; border: 1px solid #e8e6e0; border-radius: 7px; background: #fff; color: #ccc; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .del-btn:hover { border-color: #e05a3a; color: #e05a3a; background: #fff5f3; }
+  .empty-hint { text-align: center; padding: 24px 0 18px; color: #bbb; font-size: 13px; }
+  .add-date-btn { width: 100%; border: 1.5px dashed #ddd; border-radius: 8px; background: transparent; color: #aaa; padding: 10px; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; margin-top: 4px; transition: all 0.15s; }
+  .add-date-btn:hover { border-color: #b07d3a; color: #b07d3a; background: #fef9f0; }
+
+  /* Bulk paste */
+  .bulk-info { background: #f8f7f4; border: 1px solid #e8e6e0; border-radius: 8px; padding: 14px 16px; font-size: 12px; color: #888; line-height: 1.9; margin-bottom: 10px; font-family: 'DM Mono', monospace; }
+  .bulk-info code { color: #3b6d11; background: #eaf3de; padding: 1px 6px; border-radius: 4px; }
+  textarea { resize: vertical; line-height: 1.8; font-family: 'DM Mono', monospace; font-size: 13px; }
+  .bulk-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .bulk-actions button { flex: 1; border-radius: 8px; padding: 10px; font-size: 13px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .bulk-import { background: #b07d3a; color: #fff; border: none; }
+  .bulk-import:hover { background: #9a6c30; }
+  .bulk-cancel { background: #fff; border: 1px solid #ddd; color: #666; }
+  .bulk-cancel:hover { border-color: #999; color: #333; }
+
+  /* Generate button */
+  .gen-btn { width: 100%; background: #b07d3a; color: #fff; border: none; border-radius: 10px; padding: 15px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.18s; margin-top: 4px; }
+  .gen-btn:hover { background: #9a6c30; }
+
+  /* URL box */
+  .url-box { background: #fff; border: 1px solid #b07d3a; border-radius: 12px; padding: 20px 24px; margin-top: 16px; display: none; }
+  .url-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: #b07d3a; margin-bottom: 10px; }
+  .url-txt { font-family: 'DM Mono', monospace; font-size: 12px; color: #444; word-break: break-all; line-height: 1.7; background: #f8f7f4; border: 1px solid #e8e6e0; border-radius: 8px; padding: 12px 14px; }
+  .url-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .url-actions button { flex: 1; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #555; padding: 9px 14px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .url-actions button:hover { border-color: #b07d3a; color: #b07d3a; background: #fef9f0; }
+
+  /* Responses */
+  .notice { background: #fef9f0; border: 1px solid #e8c97a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #7a5a1a; margin-bottom: 20px; line-height: 1.6; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border: 1px solid #e8e6e0; border-radius: 10px; padding: 14px 16px; }
+  .stat-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; }
+  .stat-num { font-size: 28px; font-weight: 600; color: #1a1a18; margin-top: 4px; }
+  .event-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .pill { padding: 7px 16px; border-radius: 20px; border: 1px solid #ddd; background: #fff; font-size: 13px; font-weight: 500; cursor: pointer; color: #666; transition: all 0.15s; }
+  .pill:hover { border-color: #b07d3a; color: #b07d3a; }
+  .pill.active { border-color: #b07d3a; color: #b07d3a; background: #fef9f0; }
+  .resp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .resp-title { font-size: 16px; font-weight: 600; }
+  .export-btn { background: #b07d3a; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .table-wrap { overflow-x: auto; border: 1px solid #e8e6e0; border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { padding: 10px; text-align: center; font-size: 11px; font-weight: 600; color: #999; border-bottom: 1px solid #e8e6e0; white-space: nowrap; background: #fafaf8; }
+  th.name-col { text-align: left; min-width: 140px; }
+  td { padding: 9px 6px; text-align: center; border-bottom: 1px solid #f0ede8; border-right: 1px solid #f0ede8; }
+  td:last-child { border-right: none; }
+  td.name-cell { text-align: left; padding: 9px 12px; font-size: 13px; white-space: nowrap; font-weight: 500; background: #fff; }
+  .c-full { background: #e8f5ec; color: #2d7a3a; border-radius: 4px; padding: 3px 7px; font-size: 11px; font-weight: 500; display: inline-block; white-space: nowrap; }
+  .c-partial { background: #fef3e2; color: #a0650a; border-radius: 4px; padding: 3px 7px; font-size: 11px; font-weight: 500; display: inline-block; white-space: nowrap; }
+  .c-off { color: #ddd; font-size: 15px; }
+  .c-none { color: #ddd; font-size: 12px; font-family: 'DM Mono', monospace; }
+  .pending-tag { font-size: 10px; font-weight: 400; color: #bbb; margin-left: 4px; }
+
+  /* Time select dropdowns */
+  select {
+    background: #f8f7f4; border: 1px solid #ddd; border-radius: 8px;
+    padding: 10px 8px; font-size: 13px; color: #1a1a18;
+    font-family: 'DM Mono', monospace; outline: none;
+    transition: border-color 0.18s; width: 100%; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 26px;
+  }
+  select:focus { border-color: #b07d3a; background-color: #fff; }
+  .range-field select { background-color: #fff; }
+
+  /* Time select dropdowns */
+  .range-add-box { background: #f8f7f4; border: 1px solid #e8e6e0; border-radius: 10px; padding: 16px; margin-bottom: 10px; margin-top: 8px; }
+  .range-add-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+  .range-add-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
+  .range-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 80px; }
+  .range-field-sm { flex: 0 0 86px; }
+  .range-field-xs { flex: 0 0 60px; }
+  .range-field label { font-size: 11px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; }
+  .range-field input { background: #fff; }
+  .range-add-btn { width: 100%; background: #f0ebe0; border: 1px solid #c9a06a; border-radius: 8px; color: #8a5e1a; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .range-add-btn:hover { background: #b07d3a; color: #fff; border-color: #b07d3a; }
+
+  @media (max-width: 540px) {
+    .staff-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .col-hd, .date-row { grid-template-columns: 1fr 76px 76px 52px 32px; gap: 6px; }
+    .wrap { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <span class="brand">HINEMOS <em>Shift</em></span>
+    <span class="brand-sub">Admin</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('setup',this)">Event Setup</div>
+  <div class="tab" onclick="switchTab('responses',this)">Responses</div>
+</div>
+
+<!-- SETUP -->
+<div class="page active" id="page-setup">
+  <div class="wrap">
+
+    <div class="sec-label">Event</div>
+    <div class="card">
+      <div class="card-title">Event name — used as Google Sheets tab name</div>
+      <input type="text" id="event-name" placeholder="e.g. 26.06 Jewel Changi">
+    </div>
+
+    <div class="sec-label">Staff</div>
+    <div class="card">
+      <div class="staff-grid" id="staff-grid"></div>
+      <div class="add-row">
+        <input type="text" id="new-staff" placeholder="Enter full name to add..." onkeydown="if(event.key==='Enter')addStaff()">
+        <button class="add-btn" onclick="addStaff()">+ Add</button>
+      </div>
+    </div>
+
+    <div class="sec-label">Dates & Times</div>
+    <div class="card">
+      <div class="dates-bar">
+        <span class="dates-count" id="dates-count">No dates added</span>
+        <button class="paste-btn" id="paste-btn" onclick="toggleBulk()">Paste multiple dates</button>
+      </div>
+
+      <div id="single-mode">
+        <div class="col-hd">
+          <span>Date</span><span>Start</span><span>End</span><span>Need</span><span></span>
+        </div>
+        <div id="dates-list"></div>
+        <div id="empty-hint" class="empty-hint">No dates yet — use the options below to add</div>
+
+        <!-- Range add -->
+        <div class="range-add-box">
+          <div class="range-add-title">Add a date range</div>
+          <div class="range-add-row">
+            <div class="range-field">
+              <label>From</label>
+              <input type="date" id="range-from">
+            </div>
+            <div class="range-field">
+              <label>To</label>
+              <input type="date" id="range-to">
+            </div>
+            <div class="range-field range-field-sm">
+              <label>Start</label>
+              <select id="range-start"><option value="00:00">00:00</option><option value="00:30">00:30</option><option value="01:00">01:00</option><option value="01:30">01:30</option><option value="02:00">02:00</option><option value="02:30">02:30</option><option value="03:00">03:00</option><option value="03:30">03:30</option><option value="04:00">04:00</option><option value="04:30">04:30</option><option value="05:00">05:00</option><option value="05:30">05:30</option><option value="06:00">06:00</option><option value="06:30">06:30</option><option value="07:00">07:00</option><option value="07:30">07:30</option><option value="08:00">08:00</option><option value="08:30">08:30</option><option value="09:00">09:00</option><option value="09:30">09:30</option><option value="10:00" selected>10:00</option><option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option><option value="12:00">12:00</option><option value="12:30">12:30</option><option value="13:00">13:00</option><option value="13:30">13:30</option><option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option><option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option><option value="17:00">17:00</option><option value="17:30">17:30</option><option value="18:00">18:00</option><option value="18:30">18:30</option><option value="19:00">19:00</option><option value="19:30">19:30</option><option value="20:00">20:00</option><option value="20:30">20:30</option><option value="21:00">21:00</option><option value="21:30">21:30</option><option value="22:00">22:00</option><option value="22:30">22:30</option><option value="23:00">23:00</option><option value="23:30">23:30</option></select>
+            </div>
+            <div class="range-field range-field-sm">
+              <label>End</label>
+              <select id="range-end"><option value="00:00">00:00</option><option value="00:30">00:30</option><option value="01:00">01:00</option><option value="01:30">01:30</option><option value="02:00">02:00</option><option value="02:30">02:30</option><option value="03:00">03:00</option><option value="03:30">03:30</option><option value="04:00">04:00</option><option value="04:30">04:30</option><option value="05:00">05:00</option><option value="05:30">05:30</option><option value="06:00">06:00</option><option value="06:30">06:30</option><option value="07:00">07:00</option><option value="07:30">07:30</option><option value="08:00">08:00</option><option value="08:30">08:30</option><option value="09:00">09:00</option><option value="09:30">09:30</option><option value="10:00">10:00</option><option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option><option value="12:00">12:00</option><option value="12:30">12:30</option><option value="13:00">13:00</option><option value="13:30">13:30</option><option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option><option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option><option value="17:00">17:00</option><option value="17:30">17:30</option><option value="18:00">18:00</option><option value="18:30">18:30</option><option value="19:00">19:00</option><option value="19:30">19:30</option><option value="20:00">20:00</option><option value="20:30">20:30</option><option value="21:00" selected>21:00</option><option value="21:30">21:30</option><option value="22:00">22:00</option><option value="22:30">22:30</option><option value="23:00">23:00</option><option value="23:30">23:30</option></select>
+            </div>
+            <div class="range-field range-field-xs">
+              <label>Need</label>
+              <input type="number" id="range-need" value="2" min="1" max="20" style="text-align:center;">
+            </div>
+          </div>
+          <button class="range-add-btn" onclick="addDateRange()">Add range →</button>
+        </div>
+
+        <button class="add-date-btn" onclick="addDate()">+ Add single date</button>
+      </div>
+
+      <div id="bulk-mode" style="display:none;">
+        <div class="bulk-info">
+          One date per line. Format: <code>YYYY-MM-DD HH:MM HH:MM need</code><br>
+          Example: <code>2026-07-05 10:00 21:00 3</code><br>
+          Time and need are optional — defaults: 10:00–21:00, need 2
+        </div>
+        <textarea id="bulk-input" rows="8" placeholder="2026-07-05 10:00 21:00 3&#10;2026-07-06 10:00 21:00 4&#10;2026-07-07&#10;2026-07-08 14:00 21:00 2"></textarea>
+        <div class="bulk-actions">
+          <button class="bulk-import" onclick="importBulk()">Import dates →</button>
+          <button class="bulk-cancel" onclick="toggleBulk()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="gen-btn" onclick="generateURL()">Generate Staff URL →</button>
+
+    <div class="url-box" id="url-box">
+      <div class="url-lbl">Staff URL — share this link</div>
+      <div class="url-txt" id="url-txt"></div>
+      <div class="url-actions">
+        <button onclick="copyURL(this)">Copy URL</button>
+        <button onclick="openTinyURL()">Shorten via TinyURL</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RESPONSES -->
+<div class="page" id="page-responses">
+  <div class="wrap">
+    <div class="notice">Responses are saved to Google Sheets under each event's tab. Local browser responses are shown below.</div>
+    <div class="sec-label">Saved Events</div>
+    <div class="event-pills" id="event-pills"></div>
+    <div id="resp-content" style="text-align:center;padding:48px;color:#bbb;font-size:14px;">Select an event above to view responses.</div>
+  </div>
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzEGTmYlkFd6TQ-X2DBAUAU4yQjsrHBuqCLudpkCIIO9gHsWH8RroVrHovmUkbs3TOb/exec";
+
+let staffList = [
+  "Wee Meili","Enya Wu Zi Qian","Lim Yen Peow","Yap Han Nee Ariel",
+  "Hideyuki Kawamura","Yuta Sakai","Wong Tsu-Yi"
+];
+
+function renderStaff() {
+  const grid = document.getElementById('staff-grid');
+  grid.innerHTML = '';
+  staffList.forEach(name => {
+    const id = 'c_' + name.replace(/\W/g,'_');
+    const chip = document.createElement('div');
+    chip.className = 'chip on';
+    chip.id = 'chip_' + id;
+    chip.innerHTML =
+      '<div class="chip-box"><svg class="chip-tick" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>' +
+      '<span class="chip-name">' + name + '</span>' +
+      '<button class="chip-del" title="Remove" onclick="event.stopPropagation();removeStaff(' + JSON.stringify(name) + ')">✕</button>';
+    chip.onclick = function(e) {
+      if (e.target.classList.contains('chip-del')) return;
+      chip.classList.toggle('on');
+    };
+    grid.appendChild(chip);
+  });
+}
+
+function addStaff() {
+  const inp = document.getElementById('new-staff');
+  const name = inp.value.trim();
+  if (!name || staffList.includes(name)) { inp.value=''; inp.focus(); return; }
+  staffList.push(name);
+  renderStaff();
+  inp.value = '';
+  inp.focus();
+}
+
+function removeStaff(name) {
+  staffList = staffList.filter(s => s !== name);
+  renderStaff();
+}
+
+renderStaff();
+
+let dateCount = 0;
+
+function updateDateUI() {
+  const list = document.getElementById('dates-list');
+  const hint = document.getElementById('empty-hint');
+  const lbl  = document.getElementById('dates-count');
+  const n = list.children.length;
+  hint.style.display = n === 0 ? 'block' : 'none';
+  lbl.textContent = n === 0 ? 'No dates added' : n + ' date' + (n > 1 ? 's' : '') + ' added';
+}
+
+function addDateRange() {
+  const from  = document.getElementById('range-from').value;
+  const to    = document.getElementById('range-to').value;
+  const start = document.getElementById('range-start').value || '10:00';
+  const end   = document.getElementById('range-end').value   || '21:00';
+  const need  = parseInt(document.getElementById('range-need').value) || 2;
+  if (!from || !to) { alert('Please select both From and To dates.'); return; }
+  if (from > to) { alert('From date must be before To date.'); return; }
+  const cur = new Date(from);
+  const last = new Date(to);
+  let added = 0;
+  while (cur <= last) {
+    addDate(cur.toISOString().slice(0,10), start, end, need);
+    cur.setDate(cur.getDate() + 1);
+    added++;
+  }
+  document.getElementById('range-from').value = '';
+  document.getElementById('range-to').value = '';
+}
+
+function getLastRowValues() {
+  const rows = document.querySelectorAll('.date-row');
+  if (rows.length === 0) return null;
+  const last = rows[rows.length - 1];
+  const id = last.id.replace('dr_','');
+  return {
+    date:  document.getElementById('d_'+id)?.value,
+    start: document.getElementById('s_'+id)?.value,
+    end:   document.getElementById('e_'+id)?.value,
+    need:  document.getElementById('n_'+id)?.value,
+  };
+}
+
+function timeOpts(selected) {
+  let html = '';
+  for (let h = 0; h < 24; h++) {
+    for (let m of [0, 30]) {
+      const val = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+      html += '<option value="' + val + '"' + (val === selected ? ' selected' : '') + '>' + val + '</option>';
+    }
+  }
+  return html;
+}
+
+function addDate(date, start, end, need) {
+  dateCount++;
+  const id = dateCount;
+  if (!date) {
+    const last = getLastRowValues();
+    if (last && last.date) {
+      const d = new Date(last.date);
+      d.setDate(d.getDate() + 1);
+      date  = d.toISOString().slice(0,10);
+      start = start || last.start || '10:00';
+      end   = end   || last.end   || '21:00';
+      need  = need  || parseInt(last.need) || 2;
+    } else {
+      const d = new Date();
+      date = d.toISOString().slice(0,10);
+    }
+  }
+  start = start || '10:00';
+  end   = end   || '21:00';
+  need  = need  || 2;
+  const row = document.createElement('div');
+  row.className = 'date-row';
+  row.id = 'dr_' + id;
+  row.innerHTML =
+    '<input type="date" value="' + date + '" id="d_' + id + '">' +
+    '<select id="s_' + id + '">' + timeOpts(start) + '</select>' +
+    '<select id="e_' + id + '">' + timeOpts(end)   + '</select>' +
+    '<input type="number" value="' + need + '" min="1" max="20" id="n_' + id + '">' +
+    '<button class="del-btn" onclick="removeDate(' + id + ')">✕</button>';
+  document.getElementById('dates-list').appendChild(row);
+  updateDateUI();
+  setTimeout(() => row.querySelector('input[type=date]').focus(), 60);
+}
+
+function removeDate(id) {
+  const row = document.getElementById('dr_' + id);
+  if (row) row.remove();
+  updateDateUI();
+}
+
+function toggleBulk() {
+  const single = document.getElementById('single-mode');
+  const bulk   = document.getElementById('bulk-mode');
+  const btn    = document.getElementById('paste-btn');
+  const isOpen = bulk.style.display !== 'none';
+  single.style.display = isOpen ? 'block' : 'none';
+  bulk.style.display   = isOpen ? 'none'  : 'block';
+  btn.textContent = isOpen ? 'Paste multiple dates' : 'Back to manual';
+  btn.classList.toggle('active', !isOpen);
+  if (!isOpen) document.getElementById('bulk-input').focus();
+}
+
+function importBulk() {
+  const raw = document.getElementById('bulk-input').value;
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let added = 0;
+  lines.forEach(line => {
+    const parts = line.split(/\s+/);
+    const date = parts[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    addDate(date, parts[1]||'10:00', parts[2]||'21:00', parseInt(parts[3])||2);
+    added++;
+  });
+  if (added > 0) {
+    document.getElementById('bulk-input').value = '';
+    toggleBulk();
+  } else {
+    alert('No valid dates found.\nFormat: YYYY-MM-DD HH:MM HH:MM need\nExample: 2026-07-05 10:00 21:00 3');
+  }
+}
+
+updateDateUI();
+
+function getConfig() {
+  const name = document.getElementById('event-name').value.trim();
+  const staff = staffList.filter(s => {
+    const chip = document.getElementById('chip_c_' + s.replace(/\W/g,'_'));
+    return chip && chip.classList.contains('on');
+  });
+  const rows = document.querySelectorAll('.date-row');
+  const dates = [];
+  rows.forEach(row => {
+    const id = row.id.replace('dr_','');
+    const date  = document.getElementById('d_'+id)?.value;
+    const start = document.getElementById('s_'+id)?.value;
+    const end   = document.getElementById('e_'+id)?.value;
+    const need  = document.getElementById('n_'+id)?.value;
+    if (date) dates.push({ date, start, end, need: parseInt(need)||2 });
+  });
+  return { name, staff, dates };
+}
+
+function generateURL() {
+  const config = getConfig();
+  if (!config.name)         { alert('Please enter an event name.'); return; }
+  if (!config.dates.length) { alert('Please add at least one date.'); return; }
+  if (!config.staff.length) { alert('Please select at least one staff member.'); return; }
+
+  const saved = JSON.parse(localStorage.getItem('hinemos_events') || '{}');
+  saved[config.name] = config;
+  localStorage.setItem('hinemos_events', JSON.stringify(saved));
+
+  const base = window.location.href.replace('admin.html','index.html');
+  const url  = base + '?event=' + encodeURIComponent(JSON.stringify(config));
+  document.getElementById('url-txt').textContent = url;
+  const box = document.getElementById('url-box');
+  box.style.display = 'block';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copyURL(btn) {
+  const url = document.getElementById('url-txt').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    btn.style.color = '#2d7a3a';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  });
+}
+
+function openTinyURL() {
+  const url = document.getElementById('url-txt').textContent;
+  window.open('https://tinyurl.com/create.php?url=' + encodeURIComponent(url), '_blank');
+}
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  if (id === 'responses') renderPills();
+}
+
+function renderPills() {
+  const saved = JSON.parse(localStorage.getItem('hinemos_events') || '{}');
+  const pills = document.getElementById('event-pills');
+  pills.innerHTML = '';
+  const names = Object.keys(saved);
+  if (!names.length) {
+    pills.innerHTML = '<span style="color:#bbb;font-size:13px;">No events created yet.</span>';
+    return;
+  }
+  names.forEach(name => {
+    const p = document.createElement('div');
+    p.className = 'pill';
+    p.textContent = name;
+    p.onclick = () => {
+      document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      renderResponses(name, saved[name]);
+    };
+    pills.appendChild(p);
+  });
+}
+
+function renderResponses(eventName, config) {
+  const allResp = JSON.parse(localStorage.getItem('hinemos_responses') || '{}');
+  const resp    = allResp[eventName] || {};
+  const cont    = document.getElementById('resp-content');
+  const n       = Object.keys(resp).length;
+  const pending = config.staff.filter(s => !resp[s]).length;
+  let covered   = 0;
+  config.dates.forEach(ev => {
+    const avail = config.staff.filter(s => {
+      const r = resp[s]?.responses?.find(x => x.date === ev.date);
+      return r && (r.type === 'full' || r.type === 'partial');
+    }).length;
+    if (avail >= ev.need) covered++;
+  });
+
+  cont.innerHTML =
+    '<div class="resp-header">' +
+      '<div class="resp-title">' + eventName + '</div>' +
+      '<button class="export-btn" onclick="exportCSV(' + JSON.stringify(eventName) + ')">Export CSV</button>' +
+    '</div>' +
+    '<div class="stats-grid">' +
+      '<div class="stat-card"><div class="stat-lbl">Responses</div><div class="stat-num">' + n + '</div></div>' +
+      '<div class="stat-card"><div class="stat-lbl">Pending</div><div class="stat-num">' + pending + '</div></div>' +
+      '<div class="stat-card"><div class="stat-lbl">Covered</div><div class="stat-num">' + covered + '</div></div>' +
+      '<div class="stat-card"><div class="stat-lbl">Total Dates</div><div class="stat-num">' + config.dates.length + '</div></div>' +
+    '</div>' +
+    '<div class="table-wrap"><table><thead><tr>' +
+      '<th class="name-col">Name</th>' +
+      config.dates.map(d => '<th>' + d.date.slice(5) + '</th>').join('') +
+    '</tr></thead><tbody>' +
+      config.staff.map(name => {
+        const r = resp[name];
+        const cells = config.dates.map(d => {
+          if (!r) return '<td><span class="c-none">–</span></td>';
+          const x = r.responses?.find(v => v.date === d.date);
+          if (!x || x.type==='off' || !x.type) return '<td><span class="c-off">✗</span></td>';
+          if (x.type==='full') return '<td><span class="c-full">Full</span></td>';
+          return '<td><span class="c-partial">' + x.start + '–' + x.end + '</span></td>';
+        }).join('');
+        return '<tr><td class="name-cell">' + name +
+          (!r ? '<span class="pending-tag">(pending)</span>' : '') +
+          '</td>' + cells + '</tr>';
+      }).join('') +
+    '</tbody></table></div>';
+}
+
+function exportCSV(eventName) {
+  const allResp = JSON.parse(localStorage.getItem('hinemos_responses') || '{}');
+  const resp    = allResp[eventName] || {};
+  const saved   = JSON.parse(localStorage.getItem('hinemos_events') || '{}');
+  const config  = saved[eventName];
+  if (!config) return;
+  const rows = [['Name', ...config.dates.map(d => d.date)]];
+  config.staff.forEach(name => {
+    const r = resp[name];
+    rows.push([name, ...config.dates.map(d => {
+      const x = r?.responses?.find(v => v.date === d.date);
+      if (!x || x.type==='off' || !x.type) return 'Off';
+      return x.start + '-' + x.end;
+    })]);
+  });
+  const csv  = rows.map(r => r.map(c => '"'+c+'"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'shift_' + eventName.replace(/\s/g,'_') + '.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
