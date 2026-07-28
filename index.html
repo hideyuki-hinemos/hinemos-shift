@@ -209,7 +209,7 @@
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxj-6MdONN-1tsbMQLLdv7Rg7VppC57whKaNsOpoc9AOXBNCYWUEN830fT3s_HFhpsh/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwLJBbSuiQXfhABrP3XV5NedurfunTrdx4TQgMfF2fgNBJb3nQz5iWWyfYIngHG6I53/exec";
 
 let EVENT_CONFIG = null;
 let selectedStaff = null;
@@ -218,15 +218,30 @@ let availability = {};
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DOWS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-function init() {
+async function init() {
   try {
     const params = new URLSearchParams(window.location.search);
     const ep = params.get('event');
     if (!ep) throw new Error('no event');
     EVENT_CONFIG = JSON.parse(decodeURIComponent(ep));
-    if (!EVENT_CONFIG.name || !EVENT_CONFIG.dates || !EVENT_CONFIG.staff) throw new Error('invalid');
+    if (!EVENT_CONFIG.name || !EVENT_CONFIG.dates) throw new Error('invalid');
+
     document.getElementById('event-label').textContent = EVENT_CONFIG.name;
     document.title = 'Shift — ' + EVENT_CONFIG.name;
+
+    // GASから最新のスタッフリストを取得
+    try {
+      const res = await fetch(GAS_URL + '?action=getStaff');
+      const data = await res.json();
+      if (data.status === 'ok' && data.staff && data.staff.length > 0) {
+        EVENT_CONFIG.staff = data.staff;
+      }
+    } catch(e) {
+      // GAS取得失敗時はURLのスタッフリストをそのまま使う
+      console.log('Using URL staff list as fallback');
+    }
+
+    if (!EVENT_CONFIG.staff || !EVENT_CONFIG.staff.length) throw new Error('no staff');
     renderStaff();
   } catch(e) {
     setPage('page-error');

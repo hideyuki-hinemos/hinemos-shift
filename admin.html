@@ -298,7 +298,7 @@
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxj-6MdONN-1tsbMQLLdv7Rg7VppC57whKaNsOpoc9AOXBNCYWUEN830fT3s_HFhpsh/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwLJBbSuiQXfhABrP3XV5NedurfunTrdx4TQgMfF2fgNBJb3nQz5iWWyfYIngHG6I53/exec";
 
 const DEFAULT_STAFF = [
   "Wee Meili","Enya Wu Zi Qian","Lim Yen Peow","Yap Han Nee Ariel",
@@ -310,6 +310,12 @@ let staffList = JSON.parse(localStorage.getItem('hinemos_staff') || 'null') || [
 
 function saveStaff() {
   localStorage.setItem('hinemos_staff', JSON.stringify(staffList));
+  // GASにも保存して他デバイスと同期
+  fetch(GAS_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'saveStaff', staff: staffList })
+  }).catch(() => {});
 }
 
 function renderStaff() {
